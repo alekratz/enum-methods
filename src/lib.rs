@@ -45,6 +45,7 @@ Enter `enum-methods`.
 
 Instead of doing the above with the `if let ... else { panic!(...) }`, you
 simply derive from the `EnumGetters`
+
 ```
 #[derive(EnumGetters, Debug)]
 enum MyEnum {
