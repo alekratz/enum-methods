@@ -49,7 +49,10 @@ Enter `enum-methods`.
 Instead of doing the above with the `if let ... else { panic!(...) }`, you
 simply derive from the `EnumGetters`
 
-```
+```rust
+#[macro_use]
+extern crate enum_methods;
+
 #[derive(EnumGetters, Debug)]
 enum MyEnum {
     Foo(i64),
@@ -58,7 +61,7 @@ enum MyEnum {
 }
 
 fn main() {
-    let foo = MyEnum::foo(42);
+    let foo = MyEnum::Foo(42);
     assert_eq!(foo.foo(), 42);  // success!
 }
 ```
