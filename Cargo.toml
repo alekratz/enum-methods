@@ -1,0 +1,14 @@
+[package]
+name = "enum-methods"
+version = "0.1.0"
+authors = ["Alek Ratzloff <alekratz@gmail.com>"]
+description = "Generates methods for each enum variant."
+
+[lib]
+proc-macro = true
+
+[dependencies]
+syn = "0.11"
+quote = "0.3"
+matches = "0.1"
+lazy_static = "0.2"
