@@ -2,6 +2,10 @@
 
 Enum getter/is\_XXX method generation.
 
+# [crates.io](https://crates.io/crates/enum-methods)
+
+# [docs.rs](https://docs.rs/enum-methods/0.0.1/enum_methods/)
+
 # Usage
 
 In your `Cargo.toml`, add this line under your `[dependencies]` section:
