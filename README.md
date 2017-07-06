@@ -6,7 +6,7 @@ Enum getter/is\_XXX method generation.
 
 In your `Cargo.toml`, add this line under your `[dependencies]` section:
 
-```
+```toml,no_run
 enum-methods = "0.0.1"
 ```
 
