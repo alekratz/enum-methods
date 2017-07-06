@@ -2,7 +2,11 @@
 name = "enum-methods"
 version = "0.0.1"
 authors = ["Alek Ratzloff <alekratz@gmail.com>"]
+homepage = "https://github.com/alekratz/enum-methods"
 description = "Generates methods for each enum variant."
+documentation = "https://docs.rs/enum-methods/0.0.1/enum_methods"
+repository = "https://github.com/alekratz/enum-methods"
+license = "Apache2"
 
 [lib]
 proc-macro = true
