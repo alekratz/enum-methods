@@ -5,14 +5,14 @@ Enum getter/is\_XXX method generation.
 
 # [crates.io](https://crates.io/crates/enum-methods)
 
-# [docs.rs](https://docs.rs/enum-methods/0.0.1/enum_methods/)
+# [docs.rs](https://docs.rs/enum-methods/0.0.2/enum_methods/)
 
 # Usage
 
 In your `Cargo.toml`, add this line under your `[dependencies]` section:
 
 ```toml,no_run
-enum-methods = "0.0.1"
+enum-methods = "0.0.2"
 ```
 
 To use, simply derive and call methods (see the example below).
@@ -73,13 +73,13 @@ Right now, `enum-methods` has only two derivable options:
 * `EnumGetters`
 * `EnumIsA`
 
-`EnumGetters` has a couple of limitations. First, each enum variant must
-have exactly 0 or 1 members. Enum variants with 0 members do not get a
-method generated for it. Generated methods simply use the lower-case
-version of their variant name. **These names are not converated to
-snake_case.** Additionally, enums which derive from `EnumGetters` must also
-derive from `Debug` - this is for when a method is called for the wrong
-variant and needs to `panic!`.
+`EnumGetters` has a couple of limitations. First, any enum variant which
+has exactly 1 member will have a getter generated for it. All other variants
+are ignored. Generated methods simply use the lower-case version of their
+variant name. **These names are not converated to snake_case.**
+[see #1](https://github.com/alekratz/enum-methods/issues/1). Additionally,
+enums which derive from `EnumGetters` must also derive from `Debug` - this
+is for when a method is called for the wrong variant and needs to `panic!`.
 
 `EnumIsA` is much simpler than the previous; it simply adds `is_XXX`
 methods returning a boolean for whether the variant matches or not. Similar
@@ -145,6 +145,7 @@ pub fn enum_is_a(input: TokenStream) -> TokenStream {
     let s = input.to_string();
     let ast = parse_derive_input(&s).unwrap();
     let mut gen = impl_enum_is_a(&ast);
+    gen.append(&mut impl_struct_enum_is_a(&ast));
     gen.append(&mut impl_unit_enum_is_a(&ast));
     gen.parse().unwrap()
 }
@@ -337,3 +338,49 @@ fn impl_unit_enum_is_a(ast: &DeriveInput) -> quote::Tokens {
     }
 }
 
+fn impl_struct_enum_is_a(ast: &DeriveInput) -> quote::Tokens {
+    let ref name = ast.ident;
+
+    let variants =
+        if let Body::Enum(ref e) = ast.body { e }
+        else { unreachable!() };
+
+    macro_rules! is_a_filter {
+        () => {
+            variants.iter()
+                .filter(|v| if let VariantData::Struct(_) = v.data { true } else { false })
+        };
+    }
+
+    let variant_names = is_a_filter!()
+        .map(|v| v.ident.clone())
+        .collect::<Vec<Ident>>();
+
+    let function_names = is_a_filter!()
+        .map(|v| format!("is_{}", v.ident.to_string().to_lowercase()).into())
+        .collect::<Vec<Ident>>();
+
+    let variant_field_names = is_a_filter!()
+        .map(|v| v.data.fields().iter().map(|ref f| f.ident.as_ref().unwrap()).collect::<Vec<_>>())
+        .collect::<Vec<_>>();
+
+    let variant_counts = is_a_filter!()
+        .map(|v| vec!(Ident::new("_"); v.data.fields().len()))
+        .collect::<Vec<_>>();
+
+    let getter_names = vec!(name.clone(); variant_names.len());
+    
+    quote! {
+        #[allow(dead_code)]
+        impl #name {
+            #(fn #function_names(&self) -> bool {
+                if let &#getter_names::#variant_names { #(#variant_field_names: #variant_counts),* } = self {
+                    true
+                }
+                else {
+                    false
+                }
+            })*
+        }
+    }
+}

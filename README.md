@@ -4,14 +4,14 @@ Enum getter/is\_XXX method generation.
 
 # [crates.io](https://crates.io/crates/enum-methods)
 
-# [docs.rs](https://docs.rs/enum-methods/0.0.1/enum_methods/)
+# [docs.rs](https://docs.rs/enum-methods/0.0.2/enum_methods/)
 
 # Usage
 
 In your `Cargo.toml`, add this line under your `[dependencies]` section:
 
 ```toml,no_run
-enum-methods = "0.0.1"
+enum-methods = "0.0.2"
 ```
 
 To use, simply derive and call methods (see the example below).
@@ -72,13 +72,15 @@ Right now, `enum-methods` has only two derivable options:
 * `EnumGetters`
 * `EnumIsA`
 
-`EnumGetters` has a couple of limitations. First, each enum variant must
-have exactly 0 or 1 members. Enum variants with 0 members do not get a
-method generated for it. Generated methods simply use the lower-case
-version of their variant name. **These names are not converated to
-snake_case.** Additionally, enums which derive from `EnumGetters` must also
-derive from `Debug` - this is for when a method is called for the wrong
-variant and needs to `panic!`.
+`EnumGetters` has a couple of limitations.
+
+* Any enum variant which has exactly 1 member will have a getter generated for
+  it. All other variants are ignored.
+* Generated methods simply use the lower-case version of their variant name.
+  **These names are not converated to snake_case.**
+  [see #1](https://github.com/alekratz/enum-methods/issues/1).
+* Enums which derive from `EnumGetters` must also derive from `Debug` - this
+  is for when a method is called for the wrong variant and needs to `panic!`.
 
 `EnumIsA` is much simpler than the previous; it simply adds `is_XXX`
 methods returning a boolean for whether the variant matches or not. Similar
