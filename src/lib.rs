@@ -1,5 +1,72 @@
-#[macro_use]
-extern crate matches;
+//! Enum getter/is_XXX method generation.
+//!
+//! Usually when you write an enum with one or zero values, you might want to
+//! add a set of getters for them. As such:
+//!
+//! ```rust
+//! #[derive(Debug)]
+//! enum MyEnum {
+//!     Foo(i64),
+//!     Bar(char),
+//!     Baz(String),
+//! }
+//!
+//! impl MyEnum {
+//!     pub fn foo(&self) -> i64 {
+//!         if let &MyEnum::Foo(i) = self {
+//!             i
+//!         }
+//!         else {
+//!             panic!("called MyEnum::Foo() on {:?}", self)
+//!         }
+//!     }
+//!     // et cetera
+//! }
+//!
+//! ```
+//!
+//! But this gets tedious, and adds a lot code for this simple functionality.
+//! Enter `enum-methods`.
+//!
+//! Instead of doing the above with the `if let ... else { panic!(...) }`, you
+//! simply derive from the `EnumGetters`
+//! ```
+//! #[derive(EnumGetters, Debug)]
+//! enum MyEnum {
+//!     Foo(i64),
+//!     Bar(char),
+//!     Baz(String),
+//! }
+//!
+//! fn main() {
+//!     let foo = MyEnum::foo(42);
+//!     assert_eq!(foo.foo(), 42);  // success!
+//! }
+//! ```
+//! 
+//! # Requirements and use
+//! In your `Cargo.toml`, add this line under your `[dependencies]` section:
+//!
+//! ```
+//! enum-methods = "0.0.1"
+//! ```
+//!
+//! Right now, `enum-methods` has only two derivable options:
+//! * `EnumGetters`
+//! * `EnumIsA`
+//!
+//! `EnumGetters` has a couple of limitations. First, each enum variant must
+//! have exactly 0 or 1 members. Enum variants with 0 members do not get a
+//! method generated for it. Generated methods simply use the lower-case
+//! version of their variant name. **These names are not converated to
+//! snake_case.** Additionally, enums which derive from `EnumGetters` must also
+//! derive from `Debug` - this is for when a method is called for the wrong
+//! variant and needs to `panic!`.
+//!
+//! `EnumIsA` is much simpler than the previous; it simply adds `is_XXX`
+//! methods returning a boolean for whether the variant matches or not. Similar
+//! to `EnumGetters`, the name is converted to lowercase and does **not** 
+//! convert to snake_case.
 #[macro_use]
 extern crate lazy_static;
 extern crate proc_macro;
@@ -10,65 +77,89 @@ extern crate syn;
 use proc_macro::TokenStream;
 use syn::*;
 
+macro_rules! copyable {
+    ($name:expr) => {
+        Ty::Path(None, Path { global: false, segments: vec![PathSegment { ident: Ident::new($name), parameters: PathParameters::none() }] })
+    };
+}
+
 lazy_static! {
     static ref COPYABLE: Vec<Ty> = vec![
-        Ty::Path(None, Path { global: false, segments: vec![PathSegment { ident: Ident::new("i64"), parameters: PathParameters::none() }] })
+        copyable!("i8"),
+        copyable!("i16"),
+        copyable!("i32"),
+        copyable!("i64"),
+        copyable!("u8"),
+        copyable!("u16"),
+        copyable!("u32"),
+        copyable!("u64"),
+        copyable!("isize"),
+        copyable!("usize"),
+        copyable!("char"),
+        copyable!("f32"),
+        copyable!("f64"),
+        // TODO : string slices, function pointers
     ];
 }
 
-#[proc_macro_derive(EnumMethods)]
-pub fn enum_methods(input: TokenStream) -> TokenStream {
+#[proc_macro_derive(EnumGetters)]
+pub fn enum_getters(input: TokenStream) -> TokenStream {
     let s = input.to_string();
     let ast = parse_derive_input(&s).unwrap();
-    let gen = impl_enum_methods(&ast);
+    let mut getters = impl_enum_getters(&ast);
+    getters.append(&mut impl_copyable_enum_getters(&ast));
+    getters.parse().unwrap()
+}
+
+#[proc_macro_derive(EnumIsA)]
+pub fn enum_is_a(input: TokenStream) -> TokenStream {
+    let s = input.to_string();
+    let ast = parse_derive_input(&s).unwrap();
+    let gen = impl_enum_is_a(&ast);
     gen.parse().unwrap()
 }
 
-fn impl_enum_methods(ast: &DeriveInput) -> quote::Tokens {
-    assert!(matches!(ast.body, Body::Enum(_)), "EnumMethods may only be used on enums");
-    let mut tokens = impl_getter_methods(ast);
-    tokens.append(&mut impl_is_methods(ast));
-
-    tokens
-}
-
-fn impl_getter_methods(ast: &DeriveInput) -> quote::Tokens {
+fn impl_enum_getters(ast: &DeriveInput) -> quote::Tokens {
     let ref name = ast.ident;
 
     let variants =
         if let Body::Enum(ref e) = ast.body { e }
         else { unreachable!() };
 
-    assert!(variants.iter().all(|v| v.data.fields().len() <= 1), "all EnumMethods enum variants must have 0 or 1 members");
+    assert!(variants.iter().all(|v| v.data.fields().len() <= 1),
+        "all EnumGetters enum variants must have 0 or 1 members");
+    
+    macro_rules! getter_filter {
+        () => {
+            variants.iter()
+                .filter(|v| if let VariantData::Tuple(_) = v.data { true } else { false })
+                .filter(|v| !v.data.fields().is_empty())
+                .filter(|v| !COPYABLE.contains(&v.data.fields()[0].ty))
+        };
+    }
+        
 
-    let variant_names = variants.iter()
-        .filter(|v| if let VariantData::Tuple(_) = v.data { true } else { false })
-        .filter(|v| !v.data.fields().is_empty())
+    let variant_names = getter_filter!()
         .map(|v| v.ident.clone())
         .collect::<Vec<Ident>>();
 
-    let function_names = variants.iter()
-        .filter(|v| if let VariantData::Tuple(_) = v.data { true } else { false })
-        .filter(|v| !v.data.fields().is_empty())
+    let function_names = getter_filter!()
         .map(|v| v.ident.to_string().to_lowercase().into())
         .collect::<Vec<Ident>>();
 
-    let function_name_strs = variants.iter()
-        .filter(|v| if let VariantData::Tuple(_) = v.data { true } else { false })
-        .filter(|v| !v.data.fields().is_empty())
+    let function_name_strs = getter_filter!()
         .map(|v| v.ident.to_string().to_lowercase())
         .collect::<Vec<String>>();
 
-    let variant_types = variants.iter()
-        .filter(|v| if let VariantData::Tuple(_) = v.data { true } else { false })
-        .filter(|v| !v.data.fields().is_empty())
+    let variant_types = getter_filter!() 
         .map(|v| &v.data.fields()[0].ty)
-        .map(|ty| if COPYABLE.contains(ty) { ty.clone() } else { Ty::Rptr(None, Box::new(MutTy { ty: ty.clone(), mutability: Mutability::Immutable })) })
+        .map(|ty| Ty::Rptr(None, Box::new(MutTy { ty: ty.clone(), mutability: Mutability::Immutable })))
         .collect::<Vec<Ty>>();
 
     let getter_names = vec!(name.clone(); variant_types.len());
     
     quote! {
+        #[allow(dead_code)]
         impl #name {
             #(
                 fn #function_names(&self) -> #variant_types {
@@ -84,7 +175,63 @@ fn impl_getter_methods(ast: &DeriveInput) -> quote::Tokens {
     }
 }
 
-fn impl_is_methods(ast: &DeriveInput) -> quote::Tokens {
+fn impl_copyable_enum_getters(ast: &DeriveInput) -> quote::Tokens {
+    let ref name = ast.ident;
+
+    let variants =
+        if let Body::Enum(ref e) = ast.body { e }
+        else { unreachable!() };
+
+    assert!(variants.iter().all(|v| v.data.fields().len() <= 1),
+        "all EnumGetters enum variants must have 0 or 1 members");
+    
+    macro_rules! getter_filter {
+        () => {
+            variants.iter()
+                .filter(|v| if let VariantData::Tuple(_) = v.data { true } else { false })
+                .filter(|v| !v.data.fields().is_empty())
+                .filter(|v| COPYABLE.contains(&v.data.fields()[0].ty))
+        };
+    }
+        
+
+    let variant_names = getter_filter!()
+        .map(|v| v.ident.clone())
+        .collect::<Vec<Ident>>();
+
+    let function_names = getter_filter!()
+        .map(|v| v.ident.to_string().to_lowercase().into())
+        .collect::<Vec<Ident>>();
+
+    let function_name_strs = getter_filter!()
+        .map(|v| v.ident.to_string().to_lowercase())
+        .collect::<Vec<String>>();
+
+    let variant_types = getter_filter!() 
+        .map(|v| &v.data.fields()[0].ty)
+        .map(|ty| ty.clone())
+        .collect::<Vec<Ty>>();
+
+    let getter_names = vec!(name.clone(); variant_types.len());
+    
+    quote! {
+        #[allow(dead_code)]
+        impl #name {
+            #(
+                fn #function_names(&self) -> #variant_types {
+                    if let &#getter_names::#variant_names(v) = self {
+                        v
+                    }
+                    else {
+                        panic!(concat!("called ", #function_name_strs, "() on {:?}"), self);
+                    }
+                }
+            )*
+        }
+    }
+}
+
+fn impl_enum_is_a(ast: &DeriveInput) -> quote::Tokens {
     let ref name = ast.ident;
 
     let variants =
@@ -109,6 +256,7 @@ fn impl_is_methods(ast: &DeriveInput) -> quote::Tokens {
     let getter_names = vec!(name.clone(); variant_names.len());
     
     quote! {
+        #[allow(dead_code)]
         impl #name {
             #(fn #function_names(&self) -> bool {
                 if let &#getter_names::#variant_names(#(#variant_counts),*) = self {
