@@ -189,8 +189,7 @@ fn impl_enum_getters(ast: &DeriveInput) -> quote::Tokens {
     quote! {
         #[allow(dead_code)]
         impl #name {
-            #(
-                fn #function_names(&self) -> #variant_types {
+            #(pub fn #function_names(&self) -> #variant_types {
                     if let &#getter_names::#variant_names(ref v) = self {
                         v
                     }
@@ -242,8 +241,7 @@ fn impl_copyable_enum_getters(ast: &DeriveInput) -> quote::Tokens {
     quote! {
         #[allow(dead_code)]
         impl #name {
-            #(
-                fn #function_names(&self) -> #variant_types {
+            #(pub fn #function_names(&self) -> #variant_types {
                     if let &#getter_names::#variant_names(v) = self {
                         v
                     }
@@ -287,7 +285,7 @@ fn impl_enum_is_a(ast: &DeriveInput) -> quote::Tokens {
     quote! {
         #[allow(dead_code)]
         impl #name {
-            #(fn #function_names(&self) -> bool {
+            #(pub fn #function_names(&self) -> bool {
                 if let &#getter_names::#variant_names(#(#variant_counts),*) = self {
                     true
                 }
@@ -326,7 +324,7 @@ fn impl_unit_enum_is_a(ast: &DeriveInput) -> quote::Tokens {
     quote! {
         #[allow(dead_code)]
         impl #name {
-            #(fn #function_names(&self) -> bool {
+            #(pub fn #function_names(&self) -> bool {
                 if let &#getter_names::#variant_names = self {
                     true
                 }
@@ -373,7 +371,7 @@ fn impl_struct_enum_is_a(ast: &DeriveInput) -> quote::Tokens {
     quote! {
         #[allow(dead_code)]
         impl #name {
-            #(fn #function_names(&self) -> bool {
+            #(pub fn #function_names(&self) -> bool {
                 if let &#getter_names::#variant_names { #(#variant_field_names: #variant_counts),* } = self {
                     true
                 }
