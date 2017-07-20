@@ -150,7 +150,7 @@ pub fn enum_is_a(input: TokenStream) -> TokenStream {
     gen.parse().unwrap()
 }
 
-fn to_snake_case(ident: &Ident) -> String {
+fn to_snake_case<S: AsRef<str>>(ident: &S) -> String {
     let mut snake_case = String::new();
 
     for (i, c) in ident.as_ref().chars().enumerate() {
