@@ -29,8 +29,8 @@ fn test_getter_names() {
 
     let first = MyEnum::FooBar(true);
     let second = MyEnum::BarBaz("there's nothing that a hundred men or more could ever do".to_string());
-    assert_eq!(first.foobar(), true);
-    assert_eq!(second.barbaz(), "there's nothing that a hundred men or more could ever do");
+    assert_eq!(first.foo_bar(), true);
+    assert_eq!(second.bar_baz(), "there's nothing that a hundred men or more could ever do");
 }
 
 #[test]
@@ -56,7 +56,7 @@ fn test_getter_structs() {
     let first = MyEnum::FooBar(true);
     let second = MyEnum::BarBaz("there's nothing that a hundred men or more could ever do".to_string());
     let third = MyEnum::SomeStruct { foo: 42 };
-    assert_eq!(first.foobar(), true);
-    assert_eq!(second.barbaz(), "there's nothing that a hundred men or more could ever do");
+    assert_eq!(first.foo_bar(), true);
+    assert_eq!(second.bar_baz(), "there's nothing that a hundred men or more could ever do");
     assert_eq!(third.somestruct(), 42);
 }

@@ -21,8 +21,8 @@ fn test_is_a() {
     assert!(first.is_foo());
     assert!(second.is_bar());
     assert!(third.is_baz());
-    assert!(fourth.is_structtype());
-    assert!(fifth.is_biggerstructtype());
+    assert!(fourth.is_struct_type());
+    assert!(fifth.is_bigger_struct_type());
 }
 
 #[test]
@@ -38,8 +38,8 @@ fn test_is_a_names() {
     let second = MyEnum::BarBaz(false, -3);
     let third = MyEnum::Baz("cheers only whispers of some quiet conversation".to_string());
 
-    assert!(first.is_foobar());
-    assert!(second.is_barbaz());
+    assert!(first.is_foo_bar());
+    assert!(second.is_bar_baz());
     assert!(third.is_baz());
 }
 
