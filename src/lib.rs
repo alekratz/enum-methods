@@ -83,7 +83,7 @@ is for when a method is called for the wrong variant and needs to `panic!`.
 
 `EnumIsA` is much simpler than the previous; it simply adds `is_XXX`
 methods returning a boolean for whether the variant matches or not. Similar
-to `EnumGetters`, the name is converted to lowercase and does **not** 
+to `EnumGetters`, the name is converted to lowercase and does **not**
 convert to snake\_case.
 
 # License
@@ -150,6 +150,20 @@ pub fn enum_is_a(input: TokenStream) -> TokenStream {
     gen.parse().unwrap()
 }
 
+fn to_snake_case<S: AsRef<str>>(ident: &S) -> String {
+    let mut snake_case = String::new();
+
+    for (i, c) in ident.as_ref().chars().enumerate() {
+        if i > 0 && c.is_uppercase() {
+            snake_case.push('_');
+        }
+
+        snake_case.push(c.to_lowercase().next().unwrap());
+    }
+
+    snake_case
+}
+
 fn impl_enum_getters(ast: &DeriveInput) -> quote::Tokens {
     let ref name = ast.ident;
 
@@ -165,27 +179,27 @@ fn impl_enum_getters(ast: &DeriveInput) -> quote::Tokens {
                 .filter(|v| !COPYABLE.contains(&v.data.fields()[0].ty))
         };
     }
-        
+
 
     let variant_names = getter_filter!()
         .map(|v| v.ident.clone())
         .collect::<Vec<Ident>>();
 
     let function_names = getter_filter!()
-        .map(|v| v.ident.to_string().to_lowercase().into())
+        .map(|v| to_snake_case(&v.ident).into())
         .collect::<Vec<Ident>>();
 
     let function_name_strs = getter_filter!()
         .map(|v| v.ident.to_string().to_lowercase())
         .collect::<Vec<String>>();
 
-    let variant_types = getter_filter!() 
+    let variant_types = getter_filter!()
         .map(|v| &v.data.fields()[0].ty)
         .map(|ty| Ty::Rptr(None, Box::new(MutTy { ty: ty.clone(), mutability: Mutability::Immutable })))
         .collect::<Vec<Ty>>();
 
     let getter_names = vec!(name.clone(); variant_types.len());
-    
+
     quote! {
         #[allow(dead_code)]
         impl #name {
@@ -217,27 +231,27 @@ fn impl_copyable_enum_getters(ast: &DeriveInput) -> quote::Tokens {
                 .filter(|v| COPYABLE.contains(&v.data.fields()[0].ty))
         };
     }
-        
+
 
     let variant_names = getter_filter!()
         .map(|v| v.ident.clone())
         .collect::<Vec<Ident>>();
 
     let function_names = getter_filter!()
-        .map(|v| v.ident.to_string().to_lowercase().into())
+        .map(|v| to_snake_case(&v.ident).into())
         .collect::<Vec<Ident>>();
 
     let function_name_strs = getter_filter!()
         .map(|v| v.ident.to_string().to_lowercase())
         .collect::<Vec<String>>();
 
-    let variant_types = getter_filter!() 
+    let variant_types = getter_filter!()
         .map(|v| &v.data.fields()[0].ty)
         .map(|ty| ty.clone())
         .collect::<Vec<Ty>>();
 
     let getter_names = vec!(name.clone(); variant_types.len());
-    
+
     quote! {
         #[allow(dead_code)]
         impl #name {
@@ -273,7 +287,7 @@ fn impl_enum_is_a(ast: &DeriveInput) -> quote::Tokens {
         .collect::<Vec<Ident>>();
 
     let function_names = is_a_filter!()
-        .map(|v| format!("is_{}", v.ident.to_string().to_lowercase()).into())
+        .map(|v| format!("is_{}", to_snake_case(&v.ident)).into())
         .collect::<Vec<Ident>>();
 
     let variant_counts = is_a_filter!()
@@ -281,7 +295,7 @@ fn impl_enum_is_a(ast: &DeriveInput) -> quote::Tokens {
         .collect::<Vec<_>>();
 
     let getter_names = vec!(name.clone(); variant_names.len());
-    
+
     quote! {
         #[allow(dead_code)]
         impl #name {
@@ -316,11 +330,11 @@ fn impl_unit_enum_is_a(ast: &DeriveInput) -> quote::Tokens {
         .collect::<Vec<Ident>>();
 
     let function_names = is_a_filter!()
-        .map(|v| format!("is_{}", v.ident.to_string().to_lowercase()).into())
+        .map(|v| format!("is_{}", to_snake_case(&v.ident)).into())
         .collect::<Vec<Ident>>();
 
     let getter_names = vec!(name.clone(); variant_names.len());
-    
+
     quote! {
         #[allow(dead_code)]
         impl #name {
@@ -355,7 +369,7 @@ fn impl_struct_enum_is_a(ast: &DeriveInput) -> quote::Tokens {
         .collect::<Vec<Ident>>();
 
     let function_names = is_a_filter!()
-        .map(|v| format!("is_{}", v.ident.to_string().to_lowercase()).into())
+        .map(|v| format!("is_{}", to_snake_case(&v.ident)).into())
         .collect::<Vec<Ident>>();
 
     let variant_field_names = is_a_filter!()
@@ -367,7 +381,7 @@ fn impl_struct_enum_is_a(ast: &DeriveInput) -> quote::Tokens {
         .collect::<Vec<_>>();
 
     let getter_names = vec!(name.clone(); variant_names.len());
-    
+
     quote! {
         #[allow(dead_code)]
         impl #name {
