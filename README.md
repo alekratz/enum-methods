@@ -1,6 +1,7 @@
 # enum-methods
 
-![](https://travis-ci.org/alekratz/enum-methods.svg?branch=master)
+[![Build Status](https://travis-ci.org/alekratz/enum-methods.svg?branch=master)](https://travis-ci.org/alekratz/enum-methods)
+[![crates.io](https://img.shields.io/crates/v/enum-methods.svg)](https://crates.io/crates/enum-methods)
 
 Enum getter/is\_XXX method generation.
 
@@ -8,6 +9,7 @@ Enum getter/is\_XXX method generation.
 
 I will attempt to prevent *seriously* breaking changes after we hit 0.1.0.
 
+* [Github](https://github.com/alekratz/enum-methods)
 * [crates.io](https://crates.io/crates/enum-methods)
 * [docs.rs](https://docs.rs/enum-methods/0.0.4/enum_methods/)
 
