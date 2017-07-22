@@ -1,0 +1,10 @@
+language: rust
+rust:
+    - beta
+    - stable
+    - nightly
+matrix:
+    allow_failures:
+        - rust:
+            - nightly
+            - beta
