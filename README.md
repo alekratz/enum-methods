@@ -1,14 +1,15 @@
 # enum-methods
 
+![](https://travis-ci.org/alekratz/enum-methods.svg?branch=master)
+
 Enum getter/is\_XXX method generation.
 
 ## Please note that this crate is unstable and is subject to change frequently.
 
 I will attempt to prevent *seriously* breaking changes after we hit 0.1.0.
 
-# [crates.io](https://crates.io/crates/enum-methods)
-
-# [docs.rs](https://docs.rs/enum-methods/0.0.4/enum_methods/)
+* [crates.io](https://crates.io/crates/enum-methods)
+* [docs.rs](https://docs.rs/enum-methods/0.0.4/enum_methods/)
 
 # Usage
 
