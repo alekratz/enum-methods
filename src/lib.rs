@@ -56,13 +56,13 @@ But this gets tedious, and adds a lot code for this simple functionality.
 Enter `enum-methods`.
 
 Instead of doing the above with the `if let ... else { panic!(...) }`, you
-simply derive from the `EnumGetters`
+simply derive from the `EnumIntoGetters`
 
 ```rust
 #[macro_use]
 extern crate enum_methods;
 
-#[derive(EnumGetters, Debug)]
+#[derive(EnumIntoGetters, EnumAsGetters, Debug)]
 enum MyEnum {
     Foo(i64),
     Bar(char),
@@ -70,22 +70,26 @@ enum MyEnum {
 }
 
 fn main() {
-    let foo = MyEnum::Foo(42);
-    assert_eq!(foo.foo(), 42);  // success!
+    let my_foo = MyEnum::Foo(42);
+    // gets as a reference
+    assert_eq!(*my_foo.as_foo(), 42);
+    // or consume the enum
+    assert_eq!(my_foo.into_foo(), 42);
 }
 ```
 
 # Requirements and gotchas
 
-Right now, `enum-methods` has only two derivable options:
-* `EnumGetters`
+Right now, `enum-methods` has only three derivable options:
+* `EnumAsGetters`
+* `EnumIntoGetters`
 * `EnumIsA`
 
-`EnumGetters` has a couple of limitations.
+`EnumAsGetters` and `EnumIntoGetters` both have a couple of limitations.
 
 * Any enum variant which has exactly 1 member will have a getter generated for
   it. All other variants are ignored.
-* Enums which derive from `EnumGetters` must also derive from `Debug` - this
+* Enums which derive from `EnumIntoGetters` must also derive from `Debug` - this
   is for when a method is called for the wrong variant and needs to `panic!`.
 
 `EnumIsA` is much simpler than the previous; it simply adds `is_XXX`
@@ -100,8 +104,6 @@ for more details.
 
 */
 
-#[macro_use]
-extern crate lazy_static;
 extern crate proc_macro;
 #[macro_use]
 extern crate quote;
@@ -110,41 +112,22 @@ extern crate syn;
 use proc_macro::TokenStream;
 use syn::*;
 
-macro_rules! copyable {
-    ($name:expr) => {
-        Ty::Path(None, Path { global: false, segments: vec![PathSegment { ident: Ident::new($name), parameters: PathParameters::none() }] })
-    };
-}
-
-lazy_static! {
-    static ref COPYABLE: Vec<Ty> = vec![
-        copyable!("i8"),
-        copyable!("i16"),
-        copyable!("i32"),
-        copyable!("i64"),
-        copyable!("u8"),
-        copyable!("u16"),
-        copyable!("u32"),
-        copyable!("u64"),
-        copyable!("isize"),
-        copyable!("usize"),
-        copyable!("char"),
-        copyable!("bool"),
-        copyable!("f32"),
-        copyable!("f64"),
-        // TODO : string slices, function pointers
-    ];
-}
-
 // TODO : map types for what a reference should return in its getter
 // e.g. String -> &str in the getter
 
-#[proc_macro_derive(EnumGetters)]
-pub fn enum_getters(input: TokenStream) -> TokenStream {
+#[proc_macro_derive(EnumAsGetters)]
+pub fn enum_as_getters(input: TokenStream) -> TokenStream {
     let s = input.to_string();
     let ast = parse_derive_input(&s).unwrap();
-    let mut getters = impl_enum_getters(&ast);
-    getters.append(&mut impl_copyable_enum_getters(&ast));
+    let getters = impl_enum_as_getters(&ast);
+    getters.parse().unwrap()
+}
+
+#[proc_macro_derive(EnumIntoGetters)]
+pub fn enum_into_getters(input: TokenStream) -> TokenStream {
+    let s = input.to_string();
+    let ast = parse_derive_input(&s).unwrap();
+    let getters = impl_enum_into_getters(&ast);
     getters.parse().unwrap()
 }
 
@@ -172,7 +155,7 @@ fn to_snake_case<S: AsRef<str>>(ident: &S) -> String {
     snake_case
 }
 
-fn impl_enum_getters(ast: &DeriveInput) -> quote::Tokens {
+fn impl_enum_as_getters(ast: &DeriveInput) -> quote::Tokens {
     let ref name = ast.ident;
 
     let variants =
@@ -184,7 +167,6 @@ fn impl_enum_getters(ast: &DeriveInput) -> quote::Tokens {
             variants.iter()
                 .filter(|v| if let VariantData::Tuple(_) = v.data { true } else { false })
                 .filter(|v| v.data.fields().len() == 1)
-                .filter(|v| !COPYABLE.contains(&v.data.fields()[0].ty))
         };
     }
 
@@ -194,7 +176,7 @@ fn impl_enum_getters(ast: &DeriveInput) -> quote::Tokens {
         .collect::<Vec<Ident>>();
 
     let function_names = getter_filter!()
-        .map(|v| to_snake_case(&v.ident).into())
+        .map(|v| format!("as_{}", to_snake_case(&v.ident)).into())
         .collect::<Vec<Ident>>();
 
     let function_name_strs = getter_filter!()
@@ -224,7 +206,7 @@ fn impl_enum_getters(ast: &DeriveInput) -> quote::Tokens {
     }
 }
 
-fn impl_copyable_enum_getters(ast: &DeriveInput) -> quote::Tokens {
+fn impl_enum_into_getters(ast: &DeriveInput) -> quote::Tokens {
     let ref name = ast.ident;
 
     let variants =
@@ -236,7 +218,6 @@ fn impl_copyable_enum_getters(ast: &DeriveInput) -> quote::Tokens {
             variants.iter()
                 .filter(|v| if let VariantData::Tuple(_) = v.data { true } else { false })
                 .filter(|v| v.data.fields().len() == 1)
-                .filter(|v| COPYABLE.contains(&v.data.fields()[0].ty))
         };
     }
 
@@ -246,7 +227,7 @@ fn impl_copyable_enum_getters(ast: &DeriveInput) -> quote::Tokens {
         .collect::<Vec<Ident>>();
 
     let function_names = getter_filter!()
-        .map(|v| to_snake_case(&v.ident).into())
+        .map(|v| format!("into_{}", to_snake_case(&v.ident)).into())
         .collect::<Vec<Ident>>();
 
     let function_name_strs = getter_filter!()
@@ -254,8 +235,7 @@ fn impl_copyable_enum_getters(ast: &DeriveInput) -> quote::Tokens {
         .collect::<Vec<String>>();
 
     let variant_types = getter_filter!()
-        .map(|v| &v.data.fields()[0].ty)
-        .map(|ty| ty.clone())
+        .map(|v| v.data.fields()[0].ty.clone())
         .collect::<Vec<Ty>>();
 
     let getter_names = vec!(name.clone(); variant_types.len());
@@ -263,8 +243,8 @@ fn impl_copyable_enum_getters(ast: &DeriveInput) -> quote::Tokens {
     quote! {
         #[allow(dead_code)]
         impl #name {
-            #(pub fn #function_names(&self) -> #variant_types {
-                    if let &#getter_names::#variant_names(v) = self {
+            #(pub fn #function_names(self) -> #variant_types {
+                    if let #getter_names::#variant_names(v) = self {
                         v
                     }
                     else {
