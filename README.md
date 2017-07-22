@@ -32,18 +32,18 @@ add a set of getters for them. As such:
 ```rust
 #[derive(Debug)]
 enum MyEnum {
-    Foo(i64),
-    Bar(char),
-    Baz(String),
+    FooBarBaz(i64),
+    BazBarFoo(String),
+    // ... and others
 }
 
 impl MyEnum {
-    pub fn foo(&self) -> i64 {
-        if let &MyEnum::Foo(i) = self {
+    pub fn foo_bar_baz(&self) -> i64 {
+        if let &MyEnum::FooBarBaz(i) = self {
             i
         }
         else {
-            panic!("called MyEnum::Foo() on {:?}", self)
+            panic!("called MyEnum::FooBarBaz() on {:?}", self)
         }
     }
     // et cetera
@@ -55,36 +55,44 @@ But this gets tedious, and adds a lot code for this simple functionality.
 Enter `enum-methods`.
 
 Instead of doing the above with the `if let ... else { panic!(...) }`, you
-simply derive from the `EnumGetters`
+simply derive from the `EnumIntoGetters`
 
 ```rust
 #[macro_use]
 extern crate enum_methods;
 
-#[derive(EnumGetters, Debug)]
+#[derive(EnumIntoGetters, EnumAsGetters, EnumIsA, Debug)]
 enum MyEnum {
-    Foo(i64),
-    Bar(char),
-    Baz(String),
+    FooBarBaz(i64),
+    // ... and others
 }
 
 fn main() {
-    let foo = MyEnum::Foo(42);
-    assert_eq!(foo.foo(), 42);  // success!
+    let my_foo = MyEnum::FooBarBaz(42);
+    // EnumIsA - creates is_* methods for every member
+    if my_foo.is_foo_bar_baz() {
+        // EnumAsGetters - gets a reference to the enum, panicking if it is
+        // not the specified variant
+        assert_eq!(*my_foo.as_foo_bar_baz(), 42);
+        // EnumIntoGetters - consumes the enum, yielding its owned value,
+        // and panicking if it is not the specified variant
+        assert_eq!(my_foo.into_foo_bar_baz(), 42);
+    }
 }
 ```
 
 # Requirements and gotchas
 
-Right now, `enum-methods` has only two derivable options:
-* `EnumGetters`
+Right now, `enum-methods` has only three derivable options:
+* `EnumAsGetters`
+* `EnumIntoGetters`
 * `EnumIsA`
 
-`EnumGetters` has a couple of limitations.
+`EnumAsGetters` and `EnumIntoGetters` both have a couple of limitations.
 
 * Any enum variant which has exactly 1 member will have a getter generated for
   it. All other variants are ignored.
-* Enums which derive from `EnumGetters` must also derive from `Debug` - this
+* Enums which derive from `EnumIntoGetters` must also derive from `Debug` - this
   is for when a method is called for the wrong variant and needs to `panic!`.
 
 `EnumIsA` is much simpler than the previous; it simply adds `is_XXX`

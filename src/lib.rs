@@ -33,18 +33,18 @@ add a set of getters for them. As such:
 ```rust
 #[derive(Debug)]
 enum MyEnum {
-    Foo(i64),
-    Bar(char),
-    Baz(String),
+    FooBarBaz(i64),
+    BazBarFoo(String),
+    // ... and others
 }
 
 impl MyEnum {
-    pub fn foo(&self) -> i64 {
-        if let &MyEnum::Foo(i) = self {
+    pub fn foo_bar_baz(&self) -> i64 {
+        if let &MyEnum::FooBarBaz(i) = self {
             i
         }
         else {
-            panic!("called MyEnum::Foo() on {:?}", self)
+            panic!("called MyEnum::FooBarBaz() on {:?}", self)
         }
     }
     // et cetera
@@ -62,19 +62,24 @@ simply derive from the `EnumIntoGetters`
 #[macro_use]
 extern crate enum_methods;
 
-#[derive(EnumIntoGetters, EnumAsGetters, Debug)]
+#[derive(EnumIntoGetters, EnumAsGetters, EnumIsA, Debug)]
 enum MyEnum {
-    Foo(i64),
-    Bar(char),
-    Baz(String),
+    FooBarBaz(i64),
+    BazBarFoo(String),
+    // ... and others
 }
 
 fn main() {
-    let my_foo = MyEnum::Foo(42);
-    // gets as a reference
-    assert_eq!(*my_foo.as_foo(), 42);
-    // or consume the enum
-    assert_eq!(my_foo.into_foo(), 42);
+    let my_foo = MyEnum::FooBarBaz(42);
+    // EnumIsA - creates is_* methods for every member
+    if my_foo.is_foo_bar_baz() {
+        // EnumAsGetters - gets a reference to the enum, panicking if it is
+        // not the specified variant
+        assert_eq!(*my_foo.as_foo_bar_baz(), 42);
+        // EnumIntoGetters - consumes the enum, yielding its owned value,
+        // and panicking if it is not the specified variant
+        assert_eq!(my_foo.into_foo_bar_baz(), 42);
+    }
 }
 ```
 
@@ -120,6 +125,7 @@ pub fn enum_as_getters(input: TokenStream) -> TokenStream {
     let s = input.to_string();
     let ast = parse_derive_input(&s).unwrap();
     let getters = impl_enum_as_getters(&ast);
+    //panic!("{:#?}", getters);
     getters.parse().unwrap()
 }
 
