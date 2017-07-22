@@ -4,11 +4,12 @@
 [![Build Status](https://travis-ci.org/alekratz/enum-methods.svg?branch=master)](https://travis-ci.org/alekratz/enum-methods)
 [![crates.io](https://img.shields.io/crates/v/enum-methods.svg)](https://crates.io/crates/enum-methods)
 
-Enum getter/is\_XXX method generation.
+Enum getter/`is_*` method generation.
 
-## Please note that this crate is unstable and is subject to change frequently.
-
+#### Please note that this crate is unstable and is subject to change frequently.
 I will attempt to prevent *seriously* breaking changes after we hit 0.1.0.
+
+# Links
 
 * [Github](https://github.com/alekratz/enum-methods)
 * [crates.io](https://crates.io/crates/enum-methods)
