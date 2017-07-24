@@ -114,6 +114,11 @@ extern crate proc_macro;
 extern crate quote;
 extern crate syn;
 
+mod is_a;
+mod util;
+
+use is_a::*;
+use util::*;
 use proc_macro::TokenStream;
 use syn::*;
 
@@ -153,20 +158,6 @@ pub fn enum_is_a(input: TokenStream) -> TokenStream {
     gen.append(&mut impl_struct_enum_is_a(&ast));
     gen.append(&mut impl_unit_enum_is_a(&ast));
     gen.parse().unwrap()
-}
-
-fn to_snake_case<S: AsRef<str>>(ident: &S) -> String {
-    let mut snake_case = String::new();
-
-    for (i, c) in ident.as_ref().chars().enumerate() {
-        if i > 0 && c.is_uppercase() {
-            snake_case.push('_');
-        }
-
-        snake_case.push(c.to_lowercase().next().unwrap());
-    }
-
-    snake_case
 }
 
 fn impl_enum_as_getters(ast: &DeriveInput) -> quote::Tokens {
@@ -316,136 +307,6 @@ fn impl_enum_to_getters(ast: &DeriveInput) -> quote::Tokens {
                     }
                 }
             )*
-        }
-    }
-}
-
-
-fn impl_enum_is_a(ast: &DeriveInput) -> quote::Tokens {
-    let ref name = ast.ident;
-
-    let variants =
-        if let Body::Enum(ref e) = ast.body { e }
-        else { unreachable!() };
-
-    macro_rules! is_a_filter {
-        () => {
-            variants.iter()
-                .filter(|v| if let VariantData::Tuple(_) = v.data { true } else { false })
-        };
-    }
-
-    let variant_names = is_a_filter!()
-        .map(|v| v.ident.clone())
-        .collect::<Vec<Ident>>();
-
-    let function_names = is_a_filter!()
-        .map(|v| format!("is_{}", to_snake_case(&v.ident)).into())
-        .collect::<Vec<Ident>>();
-
-    let variant_counts = is_a_filter!()
-        .map(|v| vec!(Ident::new("_"); v.data.fields().len()))
-        .collect::<Vec<_>>();
-
-    let getter_names = vec!(name.clone(); variant_names.len());
-
-    quote! {
-        #[allow(dead_code)]
-        impl #name {
-            #(pub fn #function_names(&self) -> bool {
-                if let &#getter_names::#variant_names(#(#variant_counts),*) = self {
-                    true
-                }
-                else {
-                    false
-                }
-            })*
-        }
-    }
-}
-
-fn impl_unit_enum_is_a(ast: &DeriveInput) -> quote::Tokens {
-    let ref name = ast.ident;
-
-    let variants =
-        if let Body::Enum(ref e) = ast.body { e }
-        else { unreachable!() };
-
-    macro_rules! is_a_filter {
-        () => {
-            variants.iter()
-                .filter(|v| if let VariantData::Unit = v.data { true } else { false })
-        };
-    }
-
-    let variant_names = is_a_filter!()
-        .map(|v| v.ident.clone())
-        .collect::<Vec<Ident>>();
-
-    let function_names = is_a_filter!()
-        .map(|v| format!("is_{}", to_snake_case(&v.ident)).into())
-        .collect::<Vec<Ident>>();
-
-    let getter_names = vec!(name.clone(); variant_names.len());
-
-    quote! {
-        #[allow(dead_code)]
-        impl #name {
-            #(pub fn #function_names(&self) -> bool {
-                if let &#getter_names::#variant_names = self {
-                    true
-                }
-                else {
-                    false
-                }
-            })*
-        }
-    }
-}
-
-fn impl_struct_enum_is_a(ast: &DeriveInput) -> quote::Tokens {
-    let ref name = ast.ident;
-
-    let variants =
-        if let Body::Enum(ref e) = ast.body { e }
-        else { unreachable!() };
-
-    macro_rules! is_a_filter {
-        () => {
-            variants.iter()
-                .filter(|v| if let VariantData::Struct(_) = v.data { true } else { false })
-        };
-    }
-
-    let variant_names = is_a_filter!()
-        .map(|v| v.ident.clone())
-        .collect::<Vec<Ident>>();
-
-    let function_names = is_a_filter!()
-        .map(|v| format!("is_{}", to_snake_case(&v.ident)).into())
-        .collect::<Vec<Ident>>();
-
-    let variant_field_names = is_a_filter!()
-        .map(|v| v.data.fields().iter().map(|ref f| f.ident.as_ref().unwrap()).collect::<Vec<_>>())
-        .collect::<Vec<_>>();
-
-    let variant_counts = is_a_filter!()
-        .map(|v| vec!(Ident::new("_"); v.data.fields().len()))
-        .collect::<Vec<_>>();
-
-    let getter_names = vec!(name.clone(); variant_names.len());
-
-    quote! {
-        #[allow(dead_code)]
-        impl #name {
-            #(pub fn #function_names(&self) -> bool {
-                if let &#getter_names::#variant_names { #(#variant_field_names: #variant_counts),* } = self {
-                    true
-                }
-                else {
-                    false
-                }
-            })*
         }
     }
 }
