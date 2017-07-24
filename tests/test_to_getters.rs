@@ -30,11 +30,19 @@ fn test_to_getter_names() {
     }
 
     let first = MyEnum::FooBar(true);
-    let second = MyEnum::BarBaz("there's nothing that a hundred men or more could ever do".to_string());
+    let second = MyEnum::BarBaz(
+        "there's nothing that a hundred men or more could ever do".to_string(),
+    );
     assert_eq!(first.to_foo_bar(), true);
-    assert_eq!(second.to_bar_baz(), "there's nothing that a hundred men or more could ever do");
+    assert_eq!(
+        second.to_bar_baz(),
+        "there's nothing that a hundred men or more could ever do"
+    );
     assert_eq!(first.into_foo_bar(), true);
-    assert_eq!(second.into_bar_baz(), "there's nothing that a hundred men or more could ever do");
+    assert_eq!(
+        second.into_bar_baz(),
+        "there's nothing that a hundred men or more could ever do"
+    );
 }
 
 #[test]
@@ -43,35 +51,41 @@ fn test_getter_structs() {
     enum MyEnum {
         FooBar(bool),
         BarBaz(String),
-        SomeStruct { foo: i32 },  // should be skipped
+        SomeStruct { foo: i32 }, // should be skipped
     }
 
     impl MyEnum {
         pub fn to_some_struct(&self) -> i32 {
             if let &MyEnum::SomeStruct { ref foo } = self {
                 foo.clone()
-            }
-            else {
+            } else {
                 unreachable!()
             }
         }
         pub fn into_some_struct(self) -> i32 {
             if let MyEnum::SomeStruct { foo } = self {
                 foo
-            }
-            else {
+            } else {
                 unreachable!()
             }
         }
     }
 
     let first = MyEnum::FooBar(true);
-    let second = MyEnum::BarBaz("there's nothing that a hundred men or more could ever do".to_string());
+    let second = MyEnum::BarBaz(
+        "there's nothing that a hundred men or more could ever do".to_string(),
+    );
     let third = MyEnum::SomeStruct { foo: 42 };
     assert_eq!(first.to_foo_bar(), true);
-    assert_eq!(second.to_bar_baz(), "there's nothing that a hundred men or more could ever do");
+    assert_eq!(
+        second.to_bar_baz(),
+        "there's nothing that a hundred men or more could ever do"
+    );
     assert_eq!(third.to_some_struct(), 42);
     assert_eq!(first.into_foo_bar(), true);
-    assert_eq!(second.into_bar_baz(), "there's nothing that a hundred men or more could ever do");
+    assert_eq!(
+        second.into_bar_baz(),
+        "there's nothing that a hundred men or more could ever do"
+    );
     assert_eq!(third.into_some_struct(), 42);
 }
