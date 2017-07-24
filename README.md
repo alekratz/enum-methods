@@ -64,6 +64,7 @@ extern crate enum_methods;
 #[derive(EnumIntoGetters, EnumAsGetters, EnumIsA, Debug)]
 enum MyEnum {
     FooBarBaz(i64),
+    BazBarFoo(String),
     // ... and others
 }
 
@@ -83,22 +84,31 @@ fn main() {
 
 # Requirements and gotchas
 
-Right now, `enum-methods` has only three derivable options:
-* `EnumAsGetters`
-* `EnumIntoGetters`
-* `EnumIsA`
+Right now, `enum-methods` has four derivable options:
 
-`EnumAsGetters` and `EnumIntoGetters` both have a couple of limitations.
+* `EnumAsGetters` for generating `as_*` methods, which return a reference.
+* `EnumIntoGetters` for generating `into_*` methods, which consume the enum
+   and returns the data held by the variant.
+* `EnumToGetters` for generating `to_*` methods, which returns a clone of
+   the data held by the variant.
+* `EnumIsA` for generating `is_*` methods, which return a boolean indicating
+   whether the enum matches that variant.
+
+`EnumAsGetters`, `EnumIntoGetters`, and `EnumToGetters` have some limitations.
 
 * Any enum variant which has exactly 1 member will have a getter generated for
   it. All other variants are ignored.
 * Enums which derive from `EnumIntoGetters` must also derive from `Debug` - this
   is for when a method is called for the wrong variant and needs to `panic!`.
 
-`EnumIsA` is much simpler than the previous; it simply adds `is_XXX`
+Furthermore, `EnumToGetters` is *only* for enums whose variants implement
+`Clone`. There is not yet support for th
+
+`EnumIsA` is much simpler than the previous; it simply adds `is_*`
 methods returning a boolean for whether the variant matches or not.
 
-**For both methods, all names are automatically converted to snake_case**.
+**For all generated methods, all names are automatically converted to
+snake_case**.
 
 # License
 
