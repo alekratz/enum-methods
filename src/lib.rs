@@ -13,14 +13,14 @@ I will attempt to prevent *seriously* breaking changes after we hit 0.1.0.
 
 * [Github](https://github.com/alekratz/enum-methods)
 * [crates.io](https://crates.io/crates/enum-methods)
-* [docs.rs](https://docs.rs/enum-methods/0.0.4/enum_methods/)
+* [docs.rs](https://docs.rs/enum-methods/0.0.5/enum_methods/)
 
 # Usage
 
 In your `Cargo.toml`, add this line under your `[dependencies]` section:
 
 ```toml,no_run
-enum-methods = "0.0.4"
+enum-methods = "0.0.5"
 ```
 
 To use, simply derive and call methods (see the example below).
