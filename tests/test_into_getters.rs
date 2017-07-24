@@ -2,8 +2,8 @@
 extern crate enum_methods;
 
 #[test]
-fn test_getters() {
-    #[derive(EnumGetters, Debug)]
+fn test_into_getters() {
+    #[derive(EnumIntoGetters, Debug)]
     enum MyEnum {
         Foo(i64),
         Bar(bool),
@@ -13,15 +13,14 @@ fn test_getters() {
     let foo = MyEnum::Foo(42);
     let bar = MyEnum::Bar(false);
     let baz = MyEnum::Baz("hurry boy, it's waiting there for you".to_string());
-    assert_eq!(foo.foo(), 42);
-    assert_eq!(bar.bar(), false);
-    // note that this returns a &String by default
-    assert_eq!(baz.baz(), "hurry boy, it's waiting there for you");
+    assert_eq!(foo.into_foo(), 42);
+    assert_eq!(bar.into_bar(), false);
+    assert_eq!(baz.into_baz(), "hurry boy, it's waiting there for you");
 }
 
 #[test]
-fn test_getter_names() {
-    #[derive(EnumGetters, Debug)]
+fn test_into_getter_names() {
+    #[derive(EnumIntoGetters, Debug)]
     enum MyEnum {
         FooBar(bool),
         BarBaz(String),
@@ -29,13 +28,13 @@ fn test_getter_names() {
 
     let first = MyEnum::FooBar(true);
     let second = MyEnum::BarBaz("there's nothing that a hundred men or more could ever do".to_string());
-    assert_eq!(first.foo_bar(), true);
-    assert_eq!(second.bar_baz(), "there's nothing that a hundred men or more could ever do");
+    assert_eq!(first.into_foo_bar(), true);
+    assert_eq!(second.into_bar_baz(), "there's nothing that a hundred men or more could ever do");
 }
 
 #[test]
 fn test_getter_structs() {
-    #[derive(EnumGetters, Debug)]
+    #[derive(EnumIntoGetters, Debug)]
     enum MyEnum {
         FooBar(bool),
         BarBaz(String),
@@ -43,12 +42,12 @@ fn test_getter_structs() {
     }
 
     impl MyEnum {
-        pub fn somestruct(&self) -> i32 {
-            if let &MyEnum::SomeStruct { foo } = self {
+        pub fn into_some_struct(self) -> i32 {
+            if let MyEnum::SomeStruct { foo } = self {
                 foo
             }
             else {
-                panic!("called MyEnum::somestruct() on {:?}", self);
+                unreachable!()
             }
         }
     }
@@ -56,7 +55,7 @@ fn test_getter_structs() {
     let first = MyEnum::FooBar(true);
     let second = MyEnum::BarBaz("there's nothing that a hundred men or more could ever do".to_string());
     let third = MyEnum::SomeStruct { foo: 42 };
-    assert_eq!(first.foo_bar(), true);
-    assert_eq!(second.bar_baz(), "there's nothing that a hundred men or more could ever do");
-    assert_eq!(third.somestruct(), 42);
+    assert_eq!(first.into_foo_bar(), true);
+    assert_eq!(second.into_bar_baz(), "there's nothing that a hundred men or more could ever do");
+    assert_eq!(third.into_some_struct(), 42);
 }
