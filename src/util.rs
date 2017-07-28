@@ -30,7 +30,7 @@ impl UniqueIdentifierIterator {
 impl Iterator for UniqueIdentifierIterator {
     type Item = Ident;
 
-    /// Generates inifinite length strings from ASCII chars a-z
+    /// Generates infinite length strings from ASCII chars a-z
     fn next(&mut self) -> Option<Self::Item> {
         let ident = Ident::new(str::from_utf8(&self.buffer).unwrap());
         let last_char = self.buffer.len() - 1;
