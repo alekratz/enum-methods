@@ -8,14 +8,17 @@ fn test_as_getters() {
         Foo(i64),
         Bar(bool),
         Baz(String),
+        Tup(i32, String, Vec<bool>),
     }
 
     let foo = MyEnum::Foo(42);
     let bar = MyEnum::Bar(false);
     let baz = MyEnum::Baz("hurry boy, it's waiting there for you".to_string());
+    let tup = MyEnum::Tup(42, String::from("Hello, Tuple, my old friend!"), vec![true, false, true]);
     assert_eq!(*foo.as_foo(), 42);
     assert_eq!(*bar.as_bar(), false);
     assert_eq!(baz.as_baz(), "hurry boy, it's waiting there for you");
+    assert_eq!(tup.as_tup(), (&42, &String::from("Hello, Tuple, my old friend!"), &vec![true, false, true]));
 }
 
 #[test]
