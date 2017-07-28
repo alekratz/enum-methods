@@ -18,11 +18,6 @@ fn test_as_getters() {
     assert_eq!(*foo.as_foo(), 42);
     assert_eq!(*bar.as_bar(), false);
     assert_eq!(baz.as_baz(), "hurry boy, it's waiting there for you");
-
-    let (int, string, vec) = tup.as_tup();
-
-    assert_eq!(int, &42);
-
     assert_eq!(tup.as_tup(), (&42, &String::from("Hello, Tuple, my old friend!"), &vec![true, false, true]));
 }
 
