@@ -8,11 +8,7 @@ documentation = "https://docs.rs/enum-methods/0.0.8/enum_methods"
 repository = "https://github.com/alekratz/enum-methods"
 license = "Apache-2.0"
 
-# Is this too desperate?
-keywords = [
-    "predicate", "variant", "derive", "is", "enum", "getter", "generator",
-    "method"
-]
+keywords = ["predicate", "variant", "derive", "is", "enum"]
 
 [lib]
 proc-macro = true
