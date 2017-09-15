@@ -1,10 +1,10 @@
 [package]
 name = "enum-methods"
-version = "0.0.7"
+version = "0.0.8"
 authors = ["Alek Ratzloff <alekratz@gmail.com>"]
 homepage = "https://github.com/alekratz/enum-methods"
 description = "Generates methods for each enum variant."
-documentation = "https://docs.rs/enum-methods/0.0.7/enum_methods"
+documentation = "https://docs.rs/enum-methods/0.0.8/enum_methods"
 repository = "https://github.com/alekratz/enum-methods"
 license = "Apache-2.0"
 
