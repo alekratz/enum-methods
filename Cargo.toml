@@ -17,5 +17,5 @@ travis-ci = { repository = "alekratz/enum-methods", branch = "master" }
 proc-macro = true
 
 [dependencies]
-syn = "0.11"
-quote = "0.3"
+syn = { version = "0.15", features = ["full"]}
+quote = "0.6"
