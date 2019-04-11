@@ -7,7 +7,7 @@ description = "Generates methods for each enum variant."
 documentation = "https://docs.rs/enum-methods/0.0.8/enum_methods"
 repository = "https://github.com/alekratz/enum-methods"
 license = "Apache-2.0"
-
+edition = "2018"
 keywords = ["predicate", "variant", "derive", "is", "enum"]
 
 [badges]
