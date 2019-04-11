@@ -6,31 +6,23 @@ use proc_macro::{Span, TokenStream};
 
 pub(crate) fn impl_enum_as_getters(ast: &ItemEnum) -> TokenStream {
     let name = &ast.ident;
-    let variants = &ast.variants;
 
-    macro_rules! getter_filter {
-        () => {
-            variants.iter()
-                .filter(|v| if let Fields::Unnamed(_) = v.fields { true } else { false })
-        };
-    }
-
-    let variant_names = getter_filter!()
+    let variant_names = variant_filter!(ast.variants => Unnamed)
         .filter(|v| v.fields.iter().count() == 1)
         .map(|v| v.ident.clone())
         .collect::<Vec<Ident>>();
 
-    let function_names = getter_filter!()
+    let function_names = variant_filter!(ast.variants => Unnamed)
         .filter(|v| v.fields.iter().count() == 1)
         .map(|v| Ident::new(&format!("as_{}", to_snake_case(&v.ident.to_string())), Span::call_site().into()))
         .collect::<Vec<Ident>>();
 
-    let function_name_strs = getter_filter!()
+    let function_name_strs = variant_filter!(ast.variants => Unnamed)
         .filter(|v| v.fields.iter().count() == 1)
         .map(|v| v.ident.to_string().to_lowercase())
         .collect::<Vec<String>>();
 
-    let variant_types = getter_filter!()
+    let variant_types = variant_filter!(ast.variants => Unnamed)
         .filter(|v| v.fields.iter().count() == 1)
         .map(|v| &v.fields.iter().next().expect("Unreachable").ty)
         .map(|ty| Type::Reference(TypeReference {
@@ -56,22 +48,22 @@ pub(crate) fn impl_enum_as_getters(ast: &ItemEnum) -> TokenStream {
         }
     };
 
-    let variant_names = getter_filter!()
+    let variant_names = variant_filter!(ast.variants => Unnamed)
         .filter(|v| v.fields.iter().count() > 1)
         .map(|v| v.ident.clone())
         .collect::<Vec<Ident>>();
 
-    let function_names = getter_filter!()
+    let function_names = variant_filter!(ast.variants => Unnamed)
         .filter(|v| v.fields.iter().count() > 1)
         .map(|v| Ident::new(&format!("as_{}", to_snake_case(&v.ident.to_string())), Span::call_site().into()))
         .collect::<Vec<Ident>>();
 
-    let function_name_strs = getter_filter!()
+    let function_name_strs = variant_filter!(ast.variants => Unnamed)
         .filter(|v| v.fields.iter().count() > 1)
         .map(|v| v.ident.to_string().to_lowercase())
         .collect::<Vec<String>>();
 
-    let variant_types = getter_filter!()
+    let variant_types = variant_filter!(ast.variants => Unnamed)
         .filter(|v| v.fields.iter().count() > 1)
         .map(|v| {
             let elems = v.fields.iter().map(|field| Type::Reference(TypeReference {
@@ -91,12 +83,12 @@ pub(crate) fn impl_enum_as_getters(ast: &ItemEnum) -> TokenStream {
 
     let getter_names_multiple = vec!(name.clone(); variant_types.len());
 
-    let tuple_args = getter_filter!()
+    let tuple_args = variant_filter!(ast.variants => Unnamed)
         .filter(|v| v.fields.iter().count() > 1)
         .map(|v| UniqueIdentifierIterator::new().take(v.fields.iter().count()))
         .collect::<Vec<_>>();
 
-    let tuple_args2 = getter_filter!()
+    let tuple_args2 = variant_filter!(ast.variants => Unnamed)
         .filter(|v| v.fields.iter().count() > 1)
         .map(|v| UniqueIdentifierIterator::new().take(v.fields.iter().count()))
         .collect::<Vec<_>>();
@@ -119,31 +111,23 @@ pub(crate) fn impl_enum_as_getters(ast: &ItemEnum) -> TokenStream {
 
 pub(crate) fn impl_enum_into_getters(ast: &ItemEnum) -> TokenStream {
     let name = &ast.ident;
-    let variants = &ast.variants;
 
-    macro_rules! getter_filter {
-        () => {
-            variants.iter()
-                .filter(|v| if let Fields::Unnamed(_) = v.fields { true } else { false })
-        };
-    }
-
-    let variant_names = getter_filter!()
+    let variant_names = variant_filter!(ast.variants => Unnamed)
         .filter(|v| v.fields.iter().count() == 1)
         .map(|v| v.ident.clone())
         .collect::<Vec<Ident>>();
 
-    let function_names = getter_filter!()
+    let function_names = variant_filter!(ast.variants => Unnamed)
         .filter(|v| v.fields.iter().count() == 1)
         .map(|v| Ident::new(&format!("into_{}", to_snake_case(&v.ident.to_string())), Span::call_site().into()))
         .collect::<Vec<Ident>>();
 
-    let function_name_strs = getter_filter!()
+    let function_name_strs = variant_filter!(ast.variants => Unnamed)
         .filter(|v| v.fields.iter().count() == 1)
         .map(|v| v.ident.to_string().to_lowercase())
         .collect::<Vec<String>>();
 
-    let variant_types = getter_filter!()
+    let variant_types = variant_filter!(ast.variants => Unnamed)
         .filter(|v| v.fields.iter().count() == 1)
         .map(|v| v.fields.iter().next().expect("Unreachable").ty.clone())
         .collect::<Vec<Type>>();
@@ -163,22 +147,22 @@ pub(crate) fn impl_enum_into_getters(ast: &ItemEnum) -> TokenStream {
         }
     };
 
-    let variant_names = getter_filter!()
+    let variant_names = variant_filter!(ast.variants => Unnamed)
         .filter(|v| v.fields.iter().count() > 1)
         .map(|v| v.ident.clone())
         .collect::<Vec<Ident>>();
 
-    let function_names = getter_filter!()
+    let function_names = variant_filter!(ast.variants => Unnamed)
         .filter(|v| v.fields.iter().count() > 1)
         .map(|v| Ident::new(&format!("into_{}", to_snake_case(&v.ident.to_string())), Span::call_site().into()))
         .collect::<Vec<Ident>>();
 
-    let function_name_strs = getter_filter!()
+    let function_name_strs = variant_filter!(ast.variants => Unnamed)
         .filter(|v| v.fields.iter().count() > 1)
         .map(|v| v.ident.to_string().to_lowercase())
         .collect::<Vec<String>>();
 
-    let variant_types = getter_filter!()
+    let variant_types = variant_filter!(ast.variants => Unnamed)
         .filter(|v| v.fields.iter().count() > 1)
         .map(|v| {
             let elems = v.fields.iter().map(|field| field.ty.clone()).collect::<Punctuated<_, Comma>>();
@@ -193,12 +177,12 @@ pub(crate) fn impl_enum_into_getters(ast: &ItemEnum) -> TokenStream {
 
     let getter_names = vec!(name.clone(); variant_types.len());
 
-    let tuple_args = getter_filter!()
+    let tuple_args = variant_filter!(ast.variants => Unnamed)
         .filter(|v| v.fields.iter().count() > 1)
         .map(|v| UniqueIdentifierIterator::new().take(v.fields.iter().count()))
         .collect::<Vec<_>>();
 
-    let tuple_args2 = getter_filter!()
+    let tuple_args2 = variant_filter!(ast.variants => Unnamed)
         .filter(|v| v.fields.iter().count() > 1)
         .map(|v| UniqueIdentifierIterator::new().take(v.fields.iter().count()))
         .collect::<Vec<_>>();
@@ -221,31 +205,23 @@ pub(crate) fn impl_enum_into_getters(ast: &ItemEnum) -> TokenStream {
 
 pub(crate) fn impl_enum_to_getters(ast: &ItemEnum) -> TokenStream {
     let name = &ast.ident;
-    let variants = &ast.variants;
 
-    macro_rules! getter_filter {
-        () => {
-            variants.iter()
-                .filter(|v| if let Fields::Unnamed(_) = v.fields { true } else { false })
-        };
-    }
-
-    let variant_names = getter_filter!()
+    let variant_names = variant_filter!(ast.variants => Unnamed)
         .filter(|v| v.fields.iter().count() == 1)
         .map(|v| v.ident.clone())
         .collect::<Vec<Ident>>();
 
-    let function_names = getter_filter!()
+    let function_names = variant_filter!(ast.variants => Unnamed)
         .filter(|v| v.fields.iter().count() == 1)
         .map(|v| Ident::new(&format!("to_{}", to_snake_case(&v.ident.to_string())), Span::call_site().into()))
         .collect::<Vec<Ident>>();
 
-    let function_name_strs = getter_filter!()
+    let function_name_strs = variant_filter!(ast.variants => Unnamed)
         .filter(|v| v.fields.iter().count() == 1)
         .map(|v| v.ident.to_string().to_lowercase())
         .collect::<Vec<String>>();
 
-    let variant_types = getter_filter!()
+    let variant_types = variant_filter!(ast.variants => Unnamed)
         .filter(|v| v.fields.iter().count() == 1)
         .map(|v| v.fields.iter().next().expect("Unreachable").ty.clone())
         .collect::<Vec<Type>>();
@@ -265,22 +241,22 @@ pub(crate) fn impl_enum_to_getters(ast: &ItemEnum) -> TokenStream {
         }
     };
 
-    let variant_names = getter_filter!()
+    let variant_names = variant_filter!(ast.variants => Unnamed)
         .filter(|v| v.fields.iter().count() > 1)
         .map(|v| v.ident.clone())
         .collect::<Vec<Ident>>();
 
-    let function_names = getter_filter!()
+    let function_names = variant_filter!(ast.variants => Unnamed)
         .filter(|v| v.fields.iter().count() > 1)
         .map(|v| Ident::new(&format!("to_{}", to_snake_case(&v.ident.to_string())), Span::call_site().into()))
         .collect::<Vec<Ident>>();
 
-    let function_name_strs = getter_filter!()
+    let function_name_strs = variant_filter!(ast.variants => Unnamed)
         .filter(|v| v.fields.iter().count() > 1)
         .map(|v| v.ident.to_string().to_lowercase())
         .collect::<Vec<String>>();
 
-    let variant_types = getter_filter!()
+    let variant_types = variant_filter!(ast.variants => Unnamed)
         .filter(|v| v.fields.iter().count() > 1)
         .map(|v| {
             let elems = v.fields.iter().map(|field| field.ty.clone()).collect::<Punctuated<_, Comma>>();
@@ -295,12 +271,12 @@ pub(crate) fn impl_enum_to_getters(ast: &ItemEnum) -> TokenStream {
 
     let getter_names = vec!(name.clone(); variant_types.len());
 
-    let tuple_args = getter_filter!()
+    let tuple_args = variant_filter!(ast.variants => Unnamed)
         .filter(|v| v.fields.iter().count() > 1)
         .map(|v| UniqueIdentifierIterator::new().take(v.fields.iter().count()))
         .collect::<Vec<_>>();
 
-    let tuple_args2 = getter_filter!()
+    let tuple_args2 = variant_filter!(ast.variants => Unnamed)
         .filter(|v| v.fields.iter().count() > 1)
         .map(|v| UniqueIdentifierIterator::new().take(v.fields.iter().count()))
         .collect::<Vec<_>>();

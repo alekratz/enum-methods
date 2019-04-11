@@ -125,6 +125,15 @@ extern crate proc_macro;
 extern crate quote;
 extern crate syn;
 
+macro_rules! variant_filter {
+    ($e: expr => Unit) => {
+        $e.iter().filter(|v| if let Fields::Unit = v.fields { true } else { false })
+    };
+    ($e: expr => $variant: ident) => {
+        $e.iter().filter(|v| if let Fields::$variant(_) = v.fields { true } else { false })
+    };
+}
+
 mod getters;
 mod is_a;
 mod util;
@@ -140,39 +149,33 @@ use syn::*;
 #[proc_macro_derive(EnumAsGetters)]
 #[doc(hidden)]
 pub fn enum_as_getters(input: TokenStream) -> TokenStream {
-    // let s = input.to_string();
     let ast = parse_macro_input!{input as ItemEnum};
-    let getters = impl_enum_as_getters(&ast);
-    //panic!("{:#?}", getters);
-    getters
+
+    impl_enum_as_getters(&ast)
 }
 
 #[proc_macro_derive(EnumIntoGetters)]
 #[doc(hidden)]
 pub fn enum_into_getters(input: TokenStream) -> TokenStream {
-    // let s = input.to_string();
     let ast = parse_macro_input!{input as ItemEnum};
-    let getters = impl_enum_into_getters(&ast);
-    getters
+
+    impl_enum_into_getters(&ast)
 }
 
 #[proc_macro_derive(EnumToGetters)]
 #[doc(hidden)]
 pub fn enum_to_getters(input: TokenStream) -> TokenStream {
-    // let s = input.to_string();
     let ast = parse_macro_input!{input as ItemEnum};
-    let getters = impl_enum_to_getters(&ast);
-    getters
+
+    impl_enum_to_getters(&ast)
 }
 
 #[proc_macro_derive(EnumIsA)]
 #[doc(hidden)]
 pub fn enum_is_a(input: TokenStream) -> TokenStream {
-    // let s = input.to_string();
     let ast = parse_macro_input!{input as ItemEnum};
     let mut gen = impl_enum_is_a(&ast);
     gen.extend(impl_struct_enum_is_a(&ast));
     gen.extend(impl_unit_enum_is_a(&ast));
     gen
 }
-

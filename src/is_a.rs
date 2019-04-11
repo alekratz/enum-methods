@@ -5,20 +5,12 @@ use proc_macro::{Span, TokenStream};
 /// Gives implementations of is_a_* functions for tuples.
 pub(crate) fn impl_enum_is_a(ast: &ItemEnum) -> TokenStream {
     let name = &ast.ident;
-    let variants = &ast.variants;
 
-    macro_rules! is_a_filter {
-        () => {
-            variants.iter()
-                .filter(|v| if let Fields::Unnamed(_) = v.fields { true } else { false })
-        };
-    }
-
-    let variant_names = is_a_filter!()
+    let variant_names = variant_filter!(ast.variants => Unnamed)
         .map(|v| v.ident.clone())
         .collect::<Vec<Ident>>();
 
-    let function_names = is_a_filter!()
+    let function_names = variant_filter!(ast.variants => Unnamed)
         .map(|v| Ident::new(&format!("is_{}", to_snake_case(&v.ident.to_string())), Span::call_site().into()))
         .collect::<Vec<Ident>>();
 
@@ -42,20 +34,12 @@ pub(crate) fn impl_enum_is_a(ast: &ItemEnum) -> TokenStream {
 
 pub(crate) fn impl_unit_enum_is_a(ast: &ItemEnum) -> TokenStream {
     let name = &ast.ident;
-    let variants = &ast.variants;
 
-    macro_rules! is_a_filter {
-        () => {
-            variants.iter()
-                .filter(|v| if let Fields::Unit = v.fields { true } else { false })
-        };
-    }
-
-    let variant_names = is_a_filter!()
+    let variant_names = variant_filter!(ast.variants => Unit)
         .map(|v| v.ident.clone())
         .collect::<Vec<Ident>>();
 
-    let function_names = is_a_filter!()
+    let function_names = variant_filter!(ast.variants => Unit)
         .map(|v| Ident::new(&format!("is_{}", to_snake_case(&v.ident.to_string())), Span::call_site().into()))
         .collect::<Vec<Ident>>();
 
@@ -79,20 +63,12 @@ pub(crate) fn impl_unit_enum_is_a(ast: &ItemEnum) -> TokenStream {
 
 pub(crate) fn impl_struct_enum_is_a(ast: &ItemEnum) -> TokenStream {
     let name = &ast.ident;
-    let variants = &ast.variants;
 
-    macro_rules! is_a_filter {
-        () => {
-            variants.iter()
-                .filter(|v| if let Fields::Named(_) = v.fields { true } else { false })
-        };
-    }
-
-    let variant_names = is_a_filter!()
+    let variant_names = variant_filter!(ast.variants => Named)
         .map(|v| v.ident.clone())
         .collect::<Vec<Ident>>();
 
-    let function_names = is_a_filter!()
+    let function_names = variant_filter!(ast.variants => Named)
         .map(|v| Ident::new(&format!("is_{}", to_snake_case(&v.ident.to_string())), Span::call_site().into()))
         .collect::<Vec<Ident>>();
 
