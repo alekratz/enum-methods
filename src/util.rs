@@ -1,5 +1,6 @@
 use std::str;
 use syn::Ident;
+use proc_macro::Span;
 
 pub(crate) fn to_snake_case<S: AsRef<str>>(ident: &S) -> String {
     let mut snake_case = String::new();
@@ -22,7 +23,7 @@ pub(crate) struct UniqueIdentifierIterator {
 impl UniqueIdentifierIterator {
     pub(crate) fn new() -> Self {
         UniqueIdentifierIterator {
-            buffer: vec!['a' as u8],
+            buffer: vec![b'a'],
         }
     }
 }
@@ -32,13 +33,13 @@ impl Iterator for UniqueIdentifierIterator {
 
     /// Generates infinite length strings from ASCII chars a-z
     fn next(&mut self) -> Option<Self::Item> {
-        let ident = Ident::new(str::from_utf8(&self.buffer).unwrap());
+        let ident = Ident::new(str::from_utf8(&self.buffer).unwrap(), Span::call_site().into());
         let last_char = self.buffer.len() - 1;
 
-        if self.buffer[last_char] < 'z' as u8 {
+        if self.buffer[last_char] < b'z' {
             self.buffer[last_char] += 1;
         } else {
-            self.buffer.push('a' as u8);
+            self.buffer.push(b'a');
         }
 
         Some(ident)

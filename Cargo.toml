@@ -7,7 +7,7 @@ description = "Generates methods for each enum variant."
 documentation = "https://docs.rs/enum-methods/0.0.8/enum_methods"
 repository = "https://github.com/alekratz/enum-methods"
 license = "Apache-2.0"
-
+edition = "2018"
 keywords = ["predicate", "variant", "derive", "is", "enum"]
 
 [badges]
@@ -17,5 +17,5 @@ travis-ci = { repository = "alekratz/enum-methods", branch = "master" }
 proc-macro = true
 
 [dependencies]
-syn = "0.11"
-quote = "0.3"
+syn = { version = "0.15", features = ["full"]}
+quote = "0.6"
