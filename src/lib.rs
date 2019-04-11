@@ -129,8 +129,8 @@ mod getters;
 mod is_a;
 mod util;
 
-use getters::*;
-use is_a::*;
+use crate::getters::*;
+use crate::is_a::*;
 use proc_macro::TokenStream;
 use syn::*;
 

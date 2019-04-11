@@ -1,5 +1,5 @@
 use syn::*;
-use util::*;
+use crate::util::*;
 use proc_macro::{Span, TokenStream};
 
 /// Gives implementations of is_a_* functions for tuples.

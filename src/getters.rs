@@ -1,4 +1,4 @@
-use util::*;
+use crate::util::*;
 use syn::*;
 use syn::punctuated::Punctuated;
 use syn::token::{Comma, Paren};
